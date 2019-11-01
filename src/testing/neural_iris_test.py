@@ -5,18 +5,21 @@ from models.neural import *
 
 import numpy as np
 from sklearn.datasets import load_iris
-from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 iris = load_iris()
-X, y = iris.data, LabelBinarizer().fit_transform(iris.target)
+X, y = iris.data, iris.target
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=6)
 
 nn = NeuralNetwork([
     {
-        'neurons': 4,
-        'activation': 'sigmoid'
+        'neurons': 50,
+        'activation': 'tanh'
+    },
+    {
+        'neurons': 50,
+        'activation': 'tanh'
     },
     {
         'neurons': 3,
@@ -24,11 +27,8 @@ nn = NeuralNetwork([
     }
 ])
 
-nn.fit(X_train, y_train, iterations=5000)
+nn.fit(X_train, y_train, iterations=5000, batch_size=10, validation=True, stopping_accuracy=0.93)
 
-predictions = nn.predict(X_test)
-target = np.argmax(y_test, axis=1)
-print(predictions.shape)
-print(target.shape)
-print('Target values:', np.argmax(y_test, axis=1))
-print('Test accuracy', accuracy_score(np.argmax(y_test, axis=1), predictions))
+final_predictions = nn.predict(X_test)
+print('---------')
+print('Test accuracy', accuracy_score(y_test, final_predictions))
