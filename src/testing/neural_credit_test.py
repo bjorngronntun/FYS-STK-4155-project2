@@ -15,12 +15,12 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 nn = NeuralNetwork([
 
     {
-        'neurons': 64,
+        'neurons': 28,
         'activation': 'tanh'
     },
     {
 
-        'neurons': 64,
+        'neurons': 28,
         'activation': 'tanh'
     },
 

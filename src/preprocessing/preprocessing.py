@@ -32,7 +32,13 @@ def get_design_matrix():
     categorical_columns = [
         'SEX',
         'EDUCATION',
-        'MARRIAGE'
+        'MARRIAGE',
+        'PAY_0',
+        'PAY_2',
+        'PAY_3',
+        'PAY_4',
+        'PAY_5',
+        'PAY_6'
     ]
     df[numerical_columns] = df[numerical_columns].astype(float)
     lb = LabelBinarizer()
@@ -49,3 +55,7 @@ def get_target_values():
     df = get_clean_data_frame()
     y = np.array(df[['Y']].astype('int')).ravel()
     return y
+
+if __name__ == '__main__':
+    df = get_clean_data_frame()
+    print(df[['PAY_0', 'PAY_2', 'PAY_3', 'PAY_4', 'PAY_5', 'PAY_6']].head())
