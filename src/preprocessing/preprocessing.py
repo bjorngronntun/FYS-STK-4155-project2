@@ -3,16 +3,16 @@ import pandas as pd
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.preprocessing import StandardScaler
 
-def get_clean_data_frame():
-    df = pd.read_excel('../../data/raw/default of credit card clients.xls')
+def get_clean_data_frame(path = '../../data/raw/'):
+    df = pd.read_excel(path + 'default.xls')
     df_names = list(df.iloc[0])
     df_names[-1] = 'Y'
     df.columns = df_names
     df = df[1:]
     return df
 
-def get_design_matrix():
-    df = get_clean_data_frame()
+def get_design_matrix(path = '../../data/raw/'):
+    df = get_clean_data_frame(path)
     numerical_columns = [
         'LIMIT_BAL',
         'AGE',
@@ -51,8 +51,8 @@ def get_design_matrix():
     X = ss.fit_transform(X)
     return X
 
-def get_target_values():
-    df = get_clean_data_frame()
+def get_target_values(path = '../../data/raw/'):
+    df = get_clean_data_frame(path)
     y = np.array(df[['Y']].astype('int')).ravel()
     return y
 

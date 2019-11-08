@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelBinarizer
 from sklearn.metrics import accuracy_score
 
 class NeuralNetwork:
-    def __init__(self, layers, learning_rate=0.001, seed=3):
+    def __init__(self, layers, seed=3):
         # print('Initializing')
         self.layers = layers
         self.W = []
@@ -13,7 +13,6 @@ class NeuralNetwork:
         self.activations = []
         self.errors = []
         self.seed = seed
-        self.learning_rate = learning_rate
         self.lb = LabelBinarizer()
 
     def sigmoid(self, x):
@@ -23,7 +22,7 @@ class NeuralNetwork:
         return 2/(1 + np.exp(-2*x)) - 1
 
     def ReLU(self, x):
-        return np.where(x < 0, 0, x)
+        return np.where(x < 0, 0.01*x, x)
 
     def softmax(self, x):
         exponentials = np.exp(x)
@@ -52,7 +51,7 @@ class NeuralNetwork:
 
         return self
 
-    def backwards_pass(self, X, y):
+    def backwards_pass(self, X, y, learning_rate, regularization):
         output_error = (self.activations[-1] - y)*(self.activations[-1]*(-self.activations[-1])+self.activations[-1])/X.shape[0]
         self.errors[-1] = output_error
         error = output_error
@@ -62,23 +61,33 @@ class NeuralNetwork:
             elif self.layers[layer_no]['activation'] == 'tanh':
                 error = (1 - (self.activations[layer_no])**2)*np.dot(error, np.transpose(self.W[layer_no + 1]))
             elif self.layers[layer_no]['activation'] == 'ReLU':
-                error = (np.where(self.activations[layer_no] < 0, 0, 1))*np.dot(error, np.transpose(self.W[layer_no + 1]))
+                error = (np.where(self.activations[layer_no] < 0, 0.01, 1.0))*np.dot(error, np.transpose(self.W[layer_no + 1]))
             self.errors[layer_no] = error
 
         # Update output layer weights
-        self.W[-1] -= self.learning_rate*np.dot(np.transpose(self.activations[-2]), self.errors[-1])
-        self.biases[-1] -= self.learning_rate*np.sum(self.errors[-1], axis=0)
+        self.W[-1] -= learning_rate*(np.dot(np.transpose(self.activations[-2]), self.errors[-1]) + regularization*self.W[-1])
+        self.biases[-1] -= learning_rate*np.sum(self.errors[-1], axis=0)
 
         # Update hidden layer weights
         for layer_no in range(len(self.layers) - 2, 0, -1):
-            self.W[layer_no] -= self.learning_rate*np.dot(np.transpose(self.activations[layer_no - 1]), self.errors[layer_no])
-            self.biases[layer_no] -= self.learning_rate*np.sum(self.errors[layer_no], axis=0)
+            self.W[layer_no] -= learning_rate*(np.dot(np.transpose(self.activations[layer_no - 1]), self.errors[layer_no]) + regularization*self.W[layer_no])
+            self.biases[layer_no] -= learning_rate*np.sum(self.errors[layer_no], axis=0)
 
         # Update first layer weights
-        self.W[0] -= self.learning_rate*np.dot(np.transpose(X), self.errors[0])
-        self.biases[0] -= self.learning_rate*np.sum(self.errors[0], axis=0)
+        self.W[0] -= learning_rate*(np.dot(np.transpose(X), self.errors[0]) + regularization*self.W[0])
+        self.biases[0] -= learning_rate*np.sum(self.errors[0], axis=0)
 
-    def fit(self, X, y, iterations=10000, batch_size=16, classification=True, validation=False, validation_size=0.2, stopping_accuracy=0.9):
+    def fit(    self,
+                X,
+                y,
+                iterations=10000,
+                batch_size=16,
+                learning_rate=0.01,
+                regularization=0.0,
+                classification=True,
+                validation=False,
+                validation_size=0.2,
+                stopping_accuracy=0.9):
         np.random.seed(self.seed)
 
         # Necessary initialization
@@ -113,7 +122,7 @@ class NeuralNetwork:
                 X_batch = X_train
                 y_batch = y_train
             self.forward_pass(X_batch)
-            self.backwards_pass(X_batch, y_batch)
+            self.backwards_pass(X_batch, y_batch, learning_rate, regularization)
 
             if validation:
                 predictions = self.predict(X_valid)
@@ -122,6 +131,7 @@ class NeuralNetwork:
                 if epoch % 1000 == 0:
                     print('Accuracy:', acc)
                 if acc > stopping_accuracy:
+                    print('Stopped iterating, validation accuracy now is', acc)
                     return self
         return self
 
@@ -131,3 +141,22 @@ class NeuralNetwork:
         output = self.activations[-1]
         predictions = self.lb.inverse_transform(output)
         return predictions
+
+if __name__ == '__main__':
+    nn = NeuralNetwork(
+        layers = [
+            {
+                'neurons': 28,
+                'activation': 'tanh'
+            },
+            {
+
+                'neurons': 28,
+                'activation': 'tanh'
+            }
+        ]
+    )
+    x = np.random.random(10) - 0.5
+    print(x)
+    print(nn.ReLU(x))
+    print(np.where(x < 0, 0, 1))

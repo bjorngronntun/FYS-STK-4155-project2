@@ -27,7 +27,7 @@ nn = NeuralNetwork([
     }
 ])
 
-nn.fit(X_train, y_train, iterations=5000, batch_size=10, validation=True, stopping_accuracy=0.93)
+nn.fit(X_train, y_train, iterations=50000, batch_size=64, validation=True, stopping_accuracy=0.98)
 
 final_predictions = nn.predict(X_test)
 print('---------')
