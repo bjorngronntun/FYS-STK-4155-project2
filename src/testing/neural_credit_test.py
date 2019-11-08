@@ -38,7 +38,7 @@ nn.fit( X_train,
         regularization=0.01,
         validation=True,
         validation_size=0.05,
-        stopping_accuracy=0.83)
+        stopping_accuracy=0.82)
 
 final_predictions = nn.predict(X_test)
 print('---------')

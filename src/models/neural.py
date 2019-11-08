@@ -30,6 +30,9 @@ class NeuralNetwork:
         denominator_matrix = np.tile(denominator, (exponentials.shape[1], 1)).transpose()
         return exponentials/denominator_matrix
 
+    def linear(self, x):
+        return x
+
     def forward_pass(self, X):
         # print('Forward pass')
         current_activation = X
@@ -45,6 +48,8 @@ class NeuralNetwork:
                 activation_function = self.tanh
             elif self.layers[layer_no]['activation'] == 'ReLU':
                 activation_function = self.ReLU
+            elif self.layers[layer_no]['activation'] == 'linear':
+                activation_function = self.linear
             current_activation = activation_function(current_activation)
 
             self.activations[layer_no] = current_activation
@@ -52,7 +57,14 @@ class NeuralNetwork:
         return self
 
     def backwards_pass(self, X, y, learning_rate, regularization):
-        output_error = (self.activations[-1] - y)*(self.activations[-1]*(-self.activations[-1])+self.activations[-1])/X.shape[0]
+        # Error in output layer
+        if self.layers[-1]['activation'] == 'softmax':
+            output_error = (self.activations[-1] - y)*(self.activations[-1]*(-self.activations[-1])+self.activations[-1])/X.shape[0]
+        elif self.layers[-1]['activation'] == 'linear':
+            print('activations[-1].shape', self.activations[-1].shape)
+            print('y.shape', y.shape)
+            print('X.shape[0]', X.shape[0])
+            output_error = (self.activations[-1] - y)/X.shape[0]
         self.errors[-1] = output_error
         error = output_error
         for layer_no in range(len(self.layers) - 2, -1, -1):
