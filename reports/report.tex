@@ -8,14 +8,16 @@
 \maketitle
 
 \begin{abstract}
+In this project, we will use methods for classification to predict whether a customer is likely to default on his or her credit card debt. The methods examined will be logistic regression and the simplest form of neural networks, known as the multilayer perceptron. We will also use a variation of the neural network to predict quantitative data (regression).
 
+The implementations will be found in \texttt{src/models}, whereas \texttt{src/testing} contains small test scripts used during the development phase. All the actual results cited in this report are obtained in the two notebooks \texttt{notebooks/classification\_models.ipynb} and \texttt{notebooks/regression\_models.ipynb}.
 \end{abstract}
 
 \section{Classification: Predicting credit card default}
 \subsection{The data}
 \subsubsection{Context and domain description}
 Being able to predict whether or not a client is likely to default on payments of his or her debt is an important task for banks and other financial institutions. In this particular case, we have information on a sample of customers and their history of payment.
-\subsubsection{Description of dataset}
+
 According to the description on \url{https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients}, the dataset has the following attributes:
 
 \begin{itemize}
@@ -68,14 +70,20 @@ This minimization problem does not have a closed-form solution, but can be solve
 
 where $\eta$ is the learning rate and $\sigma(X)$ is the output of the logistic (sigmoid) function on each row of $X$. In order that the algorithm stop iterating at the right moment, we set aside a validation set and compute the accuracy of the algorithm's predictions on the validation set after each iteration.
 
-In the notebook \texttt{classification\_models}, we first perform logistic regression using \texttt{LogisticRegression} from \texttt{sklearn.linear\_model}, immediately obtaining a test accuracy of 0.8158. We then turn to our own implementation, which can be found in \texttt{models/logistic.py}. We perform training on mini-batches of size 128, and stop training when the accuracy on the validation set exceeds 0.82. This actually happens after 223000 iterations, leading to a test accuracy of 0.8126, rather close to the results obtained by \texttt{sklearn}. Further optimization and hyperparameter tuning (learning rate, batch size) is possible, but the results seem to be quite good for such a rather simple model.
+In the notebook \texttt{classification\_models.ipynb}, we first perform logistic regression using \texttt{LogisticRegression} from \texttt{sklearn.linear\_model}, immediately obtaining a test accuracy of 0.8158. We then turn to our own implementation, which can be found in \texttt{models/logistic.py}. We perform training on mini-batches of size 128, and stop training when the accuracy on the validation set exceeds 0.82. This actually happens after 223000 iterations, leading to a test accuracy of 0.8126, rather close to the results obtained by \texttt{sklearn}. Further optimization and hyperparameter tuning (learning rate, batch size) is possible, but the results seem to be quite good for such a rather simple model.
 
 \subsubsection{Neural networks}
 A neural network can be thought of as a large system of interconnected nodes, each of which recieves input from and sends output to other nodes. The simplest version, and the one with which we will be working, is known as the multi-layer perceptron. Here, prediction is done in the following way. Given an input vector $x$, we multiply by a weight matrix $W^{(1)}$, add a bias vector $b^{(1)}$ and apply an activation function $f^{(1)}$, obtaining a vector $f^{(1)}(x^T W^{(1)} + b^{(1)})$ which can then be fed to the next layer, where a new weight matrix $W^{(2)}$, a new bias vector $b^{(2)}$ and a new activation function $f^{(2)}$ awaits it. This process continues until we reach the output layer, where we usually apply the softmax activation function so that the output can be interpreted as the probabilities of the input vector belonging to each of the possible classes. We can then simply predict the class with the highest probability.
 
-In the notebook \texttt{classification\_models} we use \texttt{Keras} to build a simple neural network with three layers, the two first having 32 neurons and a ReLU activation function, whereas the last layer has only 1 neuron and use the sigmoid activation. We obtain an accuracy of 0.8119 on the test set.
+In the notebook \texttt{classification\_models.ipynb} we use \texttt{Keras} to build a simple neural network with three layers, the two first having 32 neurons and a ReLU activation function, whereas the last layer has only 1 neuron and use the sigmoid activation. We obtain an accuracy of 0.8119 on the test set.
 
-We now try do do something similar with our own implementation (which is to be found in \texttt{src/models/neural.py}). In order to avoid overfitting and hopefully get a better model, we use a kind of regularization where we subtract a small multiple of the weights for each node (with the exception of the bias), thus bringing the weights closer to zero. In addition to that, we use ordinary back-propagation and subtract the computed gradient multiplied by the learning rate. The best results we were able to obtain were with randomly chosen mini-batches of size 128 for training, a learning rate of 0.1 and regularization factor of 0.0091. We use early stopping and stop iterating when the accuracy on the validation set reaches 0.83. The accuracy on the test set then turns out to be 0.814.
+We now try do do something similar with our own implementation (which is to be found in \texttt{src/models/neural.py}). In order to avoid overfitting and hopefully get a better model, we use a kind of regularization where we subtract a small multiple of the weights for each node (with the exception of the bias), thus bringing the weights closer to zero. In addition to that, we use ordinary back-propagation and subtract the computed gradient multiplied by the learning rate. We used the tanh activation function on the non-output layers (our attempt at implementing the ReLU function did not seem to work properly) and the softmax function on the output layer. The best results we were able to obtain were with randomly chosen mini-batches of size 128 for training, a learning rate of 0.1 and regularization factor of 0.0091. We use early stopping and stop iterating when the accuracy on the validation set reaches 0.83. The accuracy on the test set then turns out to be 0.814, as shown in the notebook \texttt{classification\_models.ipynb}.
 
-\section{Regression: Predicting...}
+\section{Regression: Predicting Franke data}
+In this section, our intention was to use the neural network we built earlier for regression by using a linear activation function in the last layer. We did some experiments in the notebook \texttt{regression\_models.ipynb}, but the mean squared error did not seem to become very low. Probably, there are inaccuracies in our implementation, but due to shortage of time we did not get to fix them.
+
+\section{Conclusions}
+The Rolling Stones sang "Time is on my Side" in 1964. As regards this assignment, I did not feel it was on mine. Working as a teacher and raising three children, I simply was not able to assign the required time to do it properly. In 1965, the aforementioned quintet went on to sing "I can't get no Satisfaction", which describes my feeling regarding neural networks at the moment, although "I can't get no Convergence" would perhaps be even more accurate, especially when dealing with the regression part of the assignment.
+
+There are, however, some interesting results obtained. The implementations of logistic regression and simple neural networks seem to work pretty much as expected. Both the logistic regression model and the more complicated neural network reached a test accuracy between 0.81 and 0.82 on the credit card data. Further optimization and hyperparameter tuning could probably lead to slightly better results.
 \end{document}

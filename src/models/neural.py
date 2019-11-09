@@ -2,7 +2,7 @@ import numpy as np
 import unittest
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_squared_error
 
 class NeuralNetwork:
     def __init__(self, layers, seed=3):
@@ -14,6 +14,7 @@ class NeuralNetwork:
         self.errors = []
         self.seed = seed
         self.lb = LabelBinarizer()
+        self.lb_fitted = False
 
     def sigmoid(self, x):
         return 1/(1 + np.exp(-x))
@@ -58,12 +59,14 @@ class NeuralNetwork:
 
     def backwards_pass(self, X, y, learning_rate, regularization):
         # Error in output layer
+        # print('y.shape[1]', y.shape[1])
+        output_error = np.zeros(y.shape)
         if self.layers[-1]['activation'] == 'softmax':
             output_error = (self.activations[-1] - y)*(self.activations[-1]*(-self.activations[-1])+self.activations[-1])/X.shape[0]
         elif self.layers[-1]['activation'] == 'linear':
-            print('activations[-1].shape', self.activations[-1].shape)
-            print('y.shape', y.shape)
-            print('X.shape[0]', X.shape[0])
+            # print('activations[-1].shape', self.activations[-1].shape)
+            # print('y.shape', y.shape)
+            # print('X.shape[0]', X.shape[0])
             output_error = (self.activations[-1] - y)/X.shape[0]
         self.errors[-1] = output_error
         error = output_error
@@ -72,6 +75,7 @@ class NeuralNetwork:
                 error = self.activations[layer_no]*(1 - self.activations[layer_no])*np.dot(error, np.transpose(self.W[layer_no + 1]))
             elif self.layers[layer_no]['activation'] == 'tanh':
                 error = (1 - (self.activations[layer_no])**2)*np.dot(error, np.transpose(self.W[layer_no + 1]))
+
             elif self.layers[layer_no]['activation'] == 'ReLU':
                 error = (np.where(self.activations[layer_no] < 0, 0.01, 1.0))*np.dot(error, np.transpose(self.W[layer_no + 1]))
             self.errors[layer_no] = error
@@ -115,6 +119,11 @@ class NeuralNetwork:
         # Possible transformations of data
         if classification:
             y = self.lb.fit_transform(y)
+            self.lb_fitted = True
+        else:
+            if y.ndim == 1:
+                y = y.reshape((-1, 1))
+                # print('y shape:', y.shape)
         if validation:
             X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=validation_size, random_state=self.seed)
         else:
@@ -138,20 +147,31 @@ class NeuralNetwork:
 
             if validation:
                 predictions = self.predict(X_valid)
-                y_valid_transformed = self.lb.inverse_transform(y_valid)
-                acc = accuracy_score(self.lb.inverse_transform(y_valid), predictions)
-                if epoch % 1000 == 0:
-                    print('Accuracy:', acc)
-                if acc > stopping_accuracy:
-                    print('Stopped iterating, validation accuracy now is', acc)
-                    return self
+                if classification:
+                    y_valid_transformed = self.lb.inverse_transform(y_valid)
+                    acc = accuracy_score(self.lb.inverse_transform(y_valid), predictions)
+                    if epoch % 1000 == 0:
+                        print('Accuracy:', acc)
+                    if acc > stopping_accuracy:
+                        print('Stopped iterating, validation accuracy now is', acc)
+                        return self
+                else:
+                    mse_score = mean_squared_error(y_valid, predictions)
+                    if epoch % 1000 == 0:
+                        print('MSE:', mse_score)
+                    
+
+
+
         return self
 
 
     def predict(self, X):
         self.forward_pass(X)
         output = self.activations[-1]
-        predictions = self.lb.inverse_transform(output)
+        predictions = output
+        if self.lb_fitted:
+            predictions = self.lb.inverse_transform(output)
         return predictions
 
 if __name__ == '__main__':
